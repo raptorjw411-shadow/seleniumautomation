@@ -1,0 +1,52 @@
+name: Selenium Java CI
+
+on:
+  push:
+    branches:
+      - master
+      - main
+  pull_request:
+    branches:
+      - master
+      - main
+
+jobs:
+  selenium-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout repository
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 2: Setup Java
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      # Step 3: Cache Maven dependencies (faster builds)
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      # Step 4: Install Chrome
+      - name: Install Google Chrome
+        uses: browser-actions/setup-chrome@v1
+
+      # Step 5: Run Selenium tests
+      - name: Run Selenium Tests
+        run: mvn clean test
+
+      # Step 6: Upload TestNG reports (optional)
+      - name: Upload Test Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: selenium-test-reports
+          path: target/surefire-reports/
